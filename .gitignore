@@ -1,2 +1,5 @@
 *.cf
 *.vcd
+
+#vim swap file
+*.swp
