@@ -23,6 +23,27 @@ begin
         a <= '0';
         b <= '0';
         wait for 15 ns;
+        assert(r = '0') report "R : Error 1" severity error;
+        assert(c = '0') report "C : Error 1" severity error;
+
+        a <= '1';
+        b <= '0';
+        wait for 15 ns;
+        assert(r = '1') report "R : Error 2" severity error;
+        assert(c = '0') report "C : Error 2" severity error;
+
+        a <= '0';
+        b <= '1';
+        wait for 15 ns;
+        assert(r = '1') report "R : Error 3" severity error;
+        assert(c = '0') report "C : Error 3" severity error;
+
+        a <= '1';
+        b <= '1';
+        wait for 15 ns;
+        assert(r = '0') report "R : Error 4" severity error;
+        assert(c = '1') report "C : Error 4" severity error;
+
         wait;
     end process;
 end tb;
