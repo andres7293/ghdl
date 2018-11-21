@@ -41,6 +41,19 @@ begin
                        );
     process
         begin
+           --clock
+            clock <= '0';
+            wait for 1 ns;
+            clock <= '1';
+            wait for 1 ns;
+
+            --reset
+            reset <= '1';
+            clock <= '0';
+            wait for 1 ns;
+            clock <= '1';
+            wait for 1 ns;
+
             wait;
     end process;
 end architecture;
