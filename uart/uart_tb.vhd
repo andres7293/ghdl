@@ -41,18 +41,46 @@ begin
                        );
     process
         begin
-           --clock
-            clock <= '0';
-            wait for 1 ns;
-            clock <= '1';
-            wait for 1 ns;
 
-            --reset
+            --clock cycles
+            for i in 0 to 10 loop
+                wait for 1 ns;
+                clock <= '0';
+                wait for 1 ns;
+                clock <= '1';
+            end loop;
+
+            --reset 
             reset <= '1';
-            clock <= '0';
-            wait for 1 ns;
-            clock <= '1';
-            wait for 1 ns;
+            --clock cycles
+            for i in 0 to 3 loop
+                wait for 1 ns;
+                clock <= '0';
+                wait for 1 ns;
+                clock <= '1';
+            end loop;
+            reset <= '0';
+            for i in 0 to 3 loop
+                wait for 1 ns;
+                clock <= '0';
+                wait for 1 ns;
+                clock <= '1';
+            end loop;
+
+            --load baud and data
+            baud <= std_logic_vector(to_unsigned(56160, 32));
+            data <= "11111111";
+            newData <= '1';
+
+            --clock cycles
+            for i in 0 to 60 loop
+                wait for 1 ns;
+                clock <= '0';
+                wait for 1 ns;
+                clock <= '1';
+            end loop;
+
+            newData <= '0';
 
             wait;
     end process;
