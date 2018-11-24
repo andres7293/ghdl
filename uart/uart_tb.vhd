@@ -41,47 +41,45 @@ begin
                        );
     process
         begin
-
-            --clock cycles
-            for i in 0 to 10 loop
-                wait for 1 ns;
-                clock <= '0';
-                wait for 1 ns;
-                clock <= '1';
-            end loop;
-
-            --reset 
+            --reset state
             reset <= '1';
-            --clock cycles
-            for i in 0 to 3 loop
+            for i in 0 to 20 loop
                 wait for 1 ns;
                 clock <= '0';
                 wait for 1 ns;
                 clock <= '1';
-            end loop;
-            reset <= '0';
-            for i in 0 to 3 loop
+           end loop;
+            --end reset
+           reset <= '0';
+            for i in 0 to 20 loop
                 wait for 1 ns;
                 clock <= '0';
                 wait for 1 ns;
                 clock <= '1';
-            end loop;
+           end loop;
 
-            --load baud and data
-            baud <= std_logic_vector(to_unsigned(56160, 32));
-            data <= "11111111";
-            newData <= '1';
+           --load data
+           baud <= "00000000000000000000000000000111";
+           data <= "01010101";
+           newData <= '1';
+           --2 clock cycles
+           for i in 0 to 2 loop
+               wait for 1 ns;
+               clock <= '0';
+               wait for 1 ns;
+               clock <= '1';
+          end loop;
 
-            --clock cycles
-            for i in 0 to 60 loop
-                wait for 1 ns;
-                clock <= '0';
-                wait for 1 ns;
-                clock <= '1';
-            end loop;
+          newData <= '0';
 
-            newData <= '0';
-
+          --clock cycles
+          for i in 0 to 200 loop
+               wait for 1 ns;
+               clock <= '0';
+               wait for 1 ns;
+               clock <= '1';
+          end loop;
+              
             wait;
     end process;
 end architecture;

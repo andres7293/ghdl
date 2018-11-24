@@ -19,98 +19,112 @@ architecture rtl of uart is
     signal Q_ControlStates : std_logic_vector(3-1 downto 0);
     signal D_ControlStates : std_logic_vector(3-1 downto 0);
 
-    signal D_counterBaud : std_logic_vector(32-1 downto 0);
-    signal Q_counterBaud : std_logic_vector(32-1 downto 0);
-    signal D_Tx          : std_logic;
-    signal Q_Tx          : std_logic;
-    signal D_dataReg     : std_logic_vector(10-1 downto 0);
-    signal Q_dataReg     : std_logic_vector(10-1 downto 0);
-    signal bit_time      : std_logic;
-    signal Q_bitCounter  : std_logic_vector(4-1 downto 0);
-    signal D_bitCounter  : std_logic_vector(4-1 downto 0);
+    signal D_baudBus    : std_logic_vector(32-1 downto 0);
+    signal Q_baudBus    : std_logic_vector(32-1 downto 0);
+    signal D_Tx         : std_logic;
+    signal Q_Tx         : std_logic;
+    signal D_data       : std_logic_vector(10-1 downto 0);
+    signal Q_data       : std_logic_vector(10-1 downto 0);
+    signal bit_time     : std_logic;
+    signal bit_counter  : std_logic;
+    signal Q_bitCounter : std_logic_vector(4-1 downto 0);
+    signal D_bitCounter : std_logic_vector(4-1 downto 0);
 
     --mux signals
-    signal baud_gen_mux    : std_logic;
-    signal data_mux        : std_logic_vector(2-1  downto 0);
-    signal output_bit_mux  : std_logic;
-    signal bit_counter_mux : std_logic;
+    signal baudmux       : std_logic_vector(2-1  downto 0);
+    signal datamux       : std_logic_vector(2-1  downto 0);
+    signal bitCountermux : std_logic_vector(2-1  downto 0);
+    signal outputmux     : std_logic;
 begin
 
-    process (clock, reset)
+    process(clock)
     begin
-        if (reset = '1') then
-            Q_counterBaud   <= std_logic_vector(to_unsigned(0, 32));
-            Q_dataReg       <= std_logic_vector(to_unsigned(0, 10));
-            Q_Tx            <= '1';
-            Q_ControlStates <= std_logic_vector(to_unsigned(0, 3));
-            Q_bitCounter    <= std_logic_vector(to_unsigned(10, 4));
-        end if;
-        if (clock'event and (clock = '1') and (reset = '0')) then
-            Q_counterBaud   <= D_counterBaud;
-            Q_dataReg       <= D_dataReg;
-            Q_Tx            <= D_Tx;
+        if (clock'event and (clock = '1')) then
             Q_ControlStates <= D_ControlStates;
-            Q_bitCounter    <= D_bitCounter;
         end if;
     end process;
 
-    --Output logic
-    process (Q_ControlStates)
+    process(clock)
     begin
-        if (Q_ControlStates = "000") then
-            --idle
-           baud_gen_mux <= '0';
-           data_mux <= "11";
-           output_bit_mux <= '0';
-           bit_counter_mux <= '0';
-        end if;
-        if (Q_ControlStates = "001") then
-            --load registers
-            baud_gen_mux <= '1';
-            data_mux <= "10";
-            output_bit_mux <= '0';
-        end if;
-        if (Q_ControlStates <= "011") then
-            --load next bit
-            baud_gen_mux <= '1';
-        end if;
-        if (Q_ControlStates <= "100") then
-            --send bit
-            output_bit_mux <= '1';
-        end if;
-        if (Q_ControlStates <= "111") then
-            --Reload baud register
-            bit_counter_mux <= '0';
-            baud_gen_mux <= '0';
+        if (clock'event and (clock = '1')) then
+            Q_baudBus <= D_baudBus;
         end if;
     end process;
 
-    --Next state logic
-    D_ControlStates <= "001" when ((Q_ControlStates = "000") and (newData = '1')) else 
-                       "011" when (Q_ControlStates = "001") else
-                       "100" when (Q_ControlStates = "011") else
-                       "111" when ((Q_ControlStates = "100") and (bit_time = '1')) else
-                       "011" when (Q_ControlStates = "111") else
-                       "000" when ((Q_ControlStates = "111") and (bit_time = '0'));
+    process(clock)
+    begin
+        if (clock'event and (clock = '1')) then
+            Q_data <= D_data;
+        end if;
+    end process;
 
-    --baud counter
-    D_counterBaud <= baud when (baud_gen_mux = '0') else
-                     std_logic_vector(unsigned(Q_counterBaud) - 1);
-    bit_time <=  not (Q_counterBaud(32-1) and '1');
+    process(clock)
+    begin
+        if (clock'event and (clock = '1')) then
+            Q_Tx <= D_Tx;
+        end if;
+    end process;
 
-    --data register
-    D_dataReg <= '1' & data & '0' when (data_mux = "10") else
-                 Q_dataReg(8 downto 0) & '0' when (data_mux = "00") else
-                 Q_dataReg;
+    process(clock)
+    begin
+        if (clock'event and (clock = '1')) then
+            Q_bitCounter <= D_bitCounter;
+        end if;
+    end process;
 
-    --bit counter
-    D_bitCounter <= Q_bitCounter when (bit_counter_mux = '0') else
-                   std_logic_vector(unsigned(Q_bitCounter) - 1);
+    --next state logic
+    D_ControlStates <= "000" when (reset = '1') else
+                       "001" when (newData = '1') else
+                       "010" when (Q_ControlStates = "001") else
+                       "011" when (Q_ControlStates = "010") else
+                       "111" when ((Q_ControlStates = "011") and (bit_time = '1')) else
+                       "010" when (Q_ControlStates = "111") else
+                       "000" when (bit_counter = '0');
+
+
+    --output logic
+    baudmux <= "00" when (Q_ControlStates = "000" or Q_ControlStates = "010") else
+               "10" when (Q_ControlStates = "001" or Q_ControlStates = "111") else
+               "11" when (Q_ControlStates = "011");
+
+    bitCountermux <= "00" when (Q_ControlStates = "000" or Q_ControlStates = "001") else
+                     "01" when (Q_ControlStates = "010" or Q_ControlStates = "011") else
+                     "10" when (Q_ControlStates = "111");
+
+    datamux <= "00" when (Q_ControlStates = "000" or Q_ControlStates = "011" or Q_ControlStates = "111") else
+               "10" when (Q_ControlStates = "010") else
+               "11" when (Q_ControlStates = "001");
+
+    outputmux <= '0' when (Q_ControlStates = "011" or Q_ControlStates = "010" or Q_ControlStates = "111") else
+              '1';
+
+    --baud rate 
+    D_baudBus <= Q_baudBus when (baudmux = "00") else
+                 baud when (baudmux = "10") else
+                 std_logic_vector(unsigned(Q_baudBus) - 1);
+    bit_time <= '1' when (Q_baudBus = "00000000000000000000000000000000") else
+                '0';
+
+    --bitcounter
+    D_bitCounter <= std_logic_vector(to_unsigned(10, 4)) when (bitCountermux = "00") else
+                    Q_bitCounter when (bitCountermux = "01") else
+                    std_logic_vector(unsigned(Q_bitCounter) - 1) when (bitCountermux = "10");
+    bit_counter <= '0' when (Q_bitCounter = "0000") else 
+                   '1';
+
+   --data register
+    D_data <= Q_data when (datamux = "00") else
+              Q_data(8 downto 0) & '0' when (datamux = "10") else
+              '1' & data & '0' when (datamux = "11");
 
     --output biestable
-    D_Tx <= Q_dataReg(0) when (output_bit_mux = '1') else
-          '1';
+    D_Tx <= '1' when (outputmux = '1') else
+            Q_data(10-1) when (outputmux = '0');
+
     --output bit
     Tx <= Q_Tx;
+
+    isBusy <= '0' when (Q_ControlStates = "000") else
+              '1';
 
 end architecture;
