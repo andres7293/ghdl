@@ -73,27 +73,31 @@ begin
     end process;
 
     --next state logic
-    D_ControlStates <= "000" when (reset = '1') else
+    D_ControlStates <= "000" when (reset = '0') else
                        "001" when (newData = '1') else
                        "010" when (Q_ControlStates = "001") else
                        "011" when (Q_ControlStates = "010") else
                        "111" when ((Q_ControlStates = "011") and (bit_time = '1')) else
                        "010" when (Q_ControlStates = "111") else
-                       "000" when (bit_counter = '0');
+                       "000" when (bit_counter = '0') else
+                       Q_ControlStates;
 
 
     --output logic
     baudmux <= "00" when (Q_ControlStates = "000" or Q_ControlStates = "010") else
                "10" when (Q_ControlStates = "001" or Q_ControlStates = "111") else
-               "11" when (Q_ControlStates = "011");
+               "11" when (Q_ControlStates = "011") else
+               "00";
 
     bitCountermux <= "00" when (Q_ControlStates = "000" or Q_ControlStates = "001") else
                      "01" when (Q_ControlStates = "010" or Q_ControlStates = "011") else
-                     "10" when (Q_ControlStates = "111");
+                     "10" when (Q_ControlStates = "111") else 
+                     "00";
 
     datamux <= "00" when (Q_ControlStates = "000" or Q_ControlStates = "011" or Q_ControlStates = "111") else
                "10" when (Q_ControlStates = "010") else
-               "11" when (Q_ControlStates = "001");
+               "11" when (Q_ControlStates = "001") else
+               "00";
 
     outputmux <= '0' when (Q_ControlStates = "011" or Q_ControlStates = "010" or Q_ControlStates = "111") else
               '1';
@@ -106,20 +110,24 @@ begin
                 '0';
 
     --bitcounter
-    D_bitCounter <= std_logic_vector(to_unsigned(10, 4)) when (bitCountermux = "00") else
+    D_bitCounter <= std_logic_vector(to_unsigned(9, 4)) when (bitCountermux = "00") else
                     Q_bitCounter when (bitCountermux = "01") else
-                    std_logic_vector(unsigned(Q_bitCounter) - 1) when (bitCountermux = "10");
+                    std_logic_vector(unsigned(Q_bitCounter) - 1) when (bitCountermux = "10") else
+                    Q_bitCounter;
+
     bit_counter <= '0' when (Q_bitCounter = "0000") else 
                    '1';
 
    --data register
     D_data <= Q_data when (datamux = "00") else
               Q_data(8 downto 0) & '0' when (datamux = "10") else
-              '1' & data & '0' when (datamux = "11");
+              '1' & data & '0' when (datamux = "11") else
+              std_logic_vector(to_unsigned(0, 10));
 
     --output biestable
     D_Tx <= '1' when (outputmux = '1') else
-            Q_data(10-1) when (outputmux = '0');
+            Q_data(10-1) when (outputmux = '0') else
+            Q_data(10-1);
 
     --output bit
     Tx <= Q_Tx;
