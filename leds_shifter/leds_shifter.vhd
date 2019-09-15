@@ -58,14 +58,12 @@ begin
 	DLed <= std_logic_vector(to_signed(1, 3)) when (Mux1 = "00") else --Set register to zero
 		QLed when (Mux1 = "01") else --keep register state
 		QLed(1 downto 0) & '0' when(Mux1 = "10") else --rotate left
-		'0' & QLed(2 downto 1) when(Mux1 = "11") else -- rotate right
-		QLed; --keep register state
+		'0' & QLed(2 downto 1) when(Mux1 = "11") -- rotate right
 
 	--QTimer
-	DTimer <= std_logic_vector(to_signed(65535, 32)) when (Mux2 = "00") else
+	DTimer <= std_logic_vector(to_signed(100, 32)) when (Mux2 = "00") else
 		std_logic_vector(to_unsigned(to_integer(unsigned(QTimer)) - 1, 32)) when (Mux2 = "01") else
-		QTimer when (Mux2 = "10") else
-		QTimer;
+		QTimer when (Mux2 = "10");
 
 	--Next state logic
 	--DFSM <= "0000" when (Reset = '1') else
@@ -92,12 +90,10 @@ begin
 	Mux1 <= "00" when (QFSM = "0000") else
 		"10" when (QFSM = "0001") else
 		"11" when (QFSM = "0101") else
-		"01" when (QFSM = "0010" or QFSM = "0011" or QFSM = "0100" or QFSM = "0110" or QFSM = "0111" or QFSM = "1000") else
-		"01";
+		"01" when (QFSM = "0010" or QFSM = "0011" or QFSM = "0100" or QFSM = "0110" or QFSM = "0111" or QFSM = "1000");
 	
 	Mux2 <= "00" when (QFSM = "0000" or QFSM = "0001" or QFSM = "0011" or QFSM = "0100" or QFSM = "0101" or QFSM = "0111" or QFSM = "1000") else
-		"01" when (QFSM = "0010" or QFSM  = "0110") else 
-		"00";
+		"01" when (QFSM = "0010" or QFSM  = "0110");
 	
 	--output logic
 	Leds <= QLed;	
