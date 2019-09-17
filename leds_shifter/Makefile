@@ -15,5 +15,8 @@ elaborate:
 run:
 	${CC} -r leds_shifter_tb --vcd=leds_shifter_tb.vcd
 
+clean:
+	rm *.cf
+
 gtkwave:
 	gtkwave leds_shifter_tb.vcd
