@@ -62,7 +62,7 @@ begin
         QLed;
 
 	--QTimer
-    DTimer <= std_logic_vector(to_signed(10, 32)) when (Mux2 = "00") else
+    DTimer <= std_logic_vector(to_signed(8000000, 32)) when (Mux2 = "00") else
               std_logic_vector(to_signed(to_integer(signed(QTimer)) - 1, 32)) when (Mux2 = "01") else
               QTimer when (Mux2 = "10") else
               QTimer;
