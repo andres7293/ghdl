@@ -69,12 +69,19 @@ begin
               
     --Next state logic
     DFSM <= "0000" when (Reset = '1') else
-            "0001" when (QFSM = "0000") else
+            "0001" when (QFSM = "0000" and Reset = '0') else
             "0010" when (QFSM = "0001") else
             "0010" when (QTimer /= std_logic_vector(to_unsigned(0, 32)) and QFSM = "0010") else
             "0011" when (QTimer = std_logic_vector(to_unsigned(0, 32)) and QFSM = "0010") else
             "0001" when (QLed(2) = '0' and QFSM = "0011") else
             "0100" when (QLed(2) = '1' and QFSM = "0011") else
+	    "0101" when (QFSM = "0100") else
+	    "0110" when (QFSM = "0101") else
+	    "0110" when (QTimer /= std_logic_vector(to_unsigned(0, 32)) and QFSM = "0110") else
+	    "0111" when (QTimer = std_logic_vector(to_unsigned(0, 32)) and QFSM = "0110") else
+	    "0101" when (QLed(0) = '0' and QFSM = "0111") else
+	    "1000" when (QLed(0) = '1' and QFSM = "0111") else
+	    "0001" when (QFSM = "1000") else
             "0000";
 
 	--Mux logic
